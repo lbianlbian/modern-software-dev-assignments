@@ -77,20 +77,20 @@ For each, point at the code (`file:line`) and say what it buys.
 
 **End-to-end transcript**: the prompt, the tools that fired with their arguments, the result:
 ```
-❯ read my most recent email and reply appropriately to it
+❯ read my most recent email and respond appropriately to it
 
 ● gmail - Read recent emails (MCP)(count: 1)
 {
   "result": [
     {
-      "message_id": "1a10650f4053fde5",
-      "thread_id": "1a10650f4053fde5",
-      "date": "Sun, 4 Oct 2026 02:48:16 -0700",
+      "message_id": "1a1068b5ec00beb1",
+      "thread_id": "1a1068b5ec00beb1",
+      "date": "Sun, 4 Oct 2026 03:52:04 -0700",
       "sender": {
         "name": "Andrew Dragon",
         "email": "t6idetectives@gmail.com"
       },
-      "subject": "testing email",
+      "subject": "a test email",
       "snippet": "does the mcp server work? Send me back an email if so",
       "body": "does the mcp server work? Send me back an email if so",
       "body_truncated": false,
@@ -105,64 +105,124 @@ For each, point at the code (`file:line`) and say what it buys.
 }
 Allowed by auto mode classifier
 
-● gmail - Send email (MCP)(to: ["t6idetectives@gmail.com"], body: "Hi Andrew,\n\nYes, the MCP server works! This replywas sent through it.\n\nBest,\nWesley", reply_to_message_id: "1a10650f4053fde5", dry_run: true)
+● gmail - Get email recipients (MCP)(message_id: "1a1068b5ec00beb1")
+{
+  "message_id": "1a1068b5ec00beb1",
+  "thread_id": "1a1068b5ec00beb1",
+  "subject": "a test email",
+  "sender": {
+    "name": "Andrew Dragon",
+    "email": "t6idetectives@gmail.com"
+  ]
+}
+Allowed by auto mode classifier
+
+● gmail - Get email recipients (MCP)(message_id: "1a1068b5ec00beb1")
+{
+  "message_id": "1a1068b5ec00beb1",
+  "thread_id": "1a1068b5ec00beb1",
+  "subject": "a test email",
+  "sender": {
+    "name": "Andrew Dragon",
+    "email": "t6idetectives@gmail.com"
+  },
+  "reply_to": [],
+  "to": [
+    {
+      "name": "",
+      "email": "wesleybian@gmail.com"
+    }
+  ],
+  "cc": [],
+  "me": {
+    "name": "",
+    "email": "wesleybian@gmail.com"
+  }
+}
+Allowed by auto mode classifier
+
+                                                                                        03:52 AM claude-opus-5-5
+Your most recent email is from Andrew Dragon (t6idetectives@gmail.com), subject "a test email":
+
+▎ does the mcp server work? Send me back an email if so
+
+They want a reply confirming the MCP server works. Here's the draft I'd send in the same thread:
+
+▎ To: t6idetectives@gmail.com
+▎ Subject: Re: a test email
+▎
+▎ Hi Andrew,
+▎
+▎ Yes, the MCP server works. I read your email and sent this reply through it.
+▎
+▎ Best,
+▎ [your name]
+
+Your Gmail account (wesleybian@gmail.com) has no display name set, so I need you to tell me what name to sign with. I won't guess it. Once you give me the name and confirm, I'll send it.
+
+✻ Worked for 13s · done 3:52 AM
+
+❯ use the name WB
+
+● gmail - Send email (MCP)(to: ["t6idetectives@gmail.com"], body: "Hi Andrew,\n\nYes, the MCP server works. I read your email and sent this reply through it.\n\nBest,\nWB", reply_to_message_id: "1a1068b5ec00beb1", dry_run: true)
 {
   "sent": false,
   "message_id": null,
   "thread_id": null,
   "preview": {
+    "from": "wesleybian@gmail.com",
     "to": "t6idetectives@gmail.com",
     "cc": "",
-    "subject": "Re: testing email",
-    "body": "Hi Andrew,\n\nYes, the MCP server works! This reply was sent through it.\n\nBest,\nWesley",
-    "in_reply_to_thread": "1a10650f4053fde5"
+    "subject": "Re: a test email",
+    "body": "Hi Andrew,\n\nYes, the MCP server works. I read your email and sent this reply through it.\n\nBest,\nWB",
+    "in_reply_to_thread": "1a1068b5ec00beb1"
   },
   "note": "Dry run: nothing was sent. Confirm with the user, then call again with dry_run=false."
 }
 Allowed by auto mode classifier
 
-                                                                                        02:57 AM claude-opus-5-5
-Your most recent email is from Andrew Dragon (t6idetectives@gmail.com), sent today at 2:48 AM:
+                                                                                        03:53 AM claude-opus-5-5
+Here's the preview with your name added. Nothing has been sent yet.
 
-▎ Subject: testing email
-▎ does the mcp server work? Send me back an email if so
-
-I've drafted this reply in the same thread. It hasn't been sent yet:
-
+▎ From: wesleybian@gmail.com
 ▎ To: t6idetectives@gmail.com
-▎ Subject: Re: testing email
+▎ Subject: Re: a test email (reply in the same thread)
 ▎
 ▎ Hi Andrew,
 ▎
-▎ Yes, the MCP server works! This reply was sent through it.
+▎ Yes, the MCP server works. I read your email and sent this reply through it.
 ▎
 ▎ Best,
-▎ Wesley
+▎ WB
 
-I guessed the name "Wesley" from your user folder, so change it if that's wrong. Should I send it as is, or do you want any edits first?
+Should I send it?
 
-✻ Baked for 14s · done 2:57 AM
+✻ Cooked for 9s · done 3:53 AM
 
-❯ this is good send it
+❯ yes
+✻ Cooked for 9s · done 3:53 AM
 
-● gmail - Send email (MCP)(to: ["t6idetectives@gmail.com"], body: "Hi Andrew,\n\nYes, the MCP server works! This replywas sent through it.\n\nBest,\nWesley", reply_to_message_id: "1a10650f4053fde5", dry_run: false)
+❯ yes
+
+● gmail - Send email (MCP)(to: ["t6idetectives@gmail.com"], body: "Hi Andrew,\n\nYes, the MCP server works. I read your email and sent this reply through it.\n\nBest,\nWB", reply_to_message_id: "1a1068b5ec00beb1", dry_run: false)
 {
   "sent": true,
-  "message_id": "1a10658e0d4d9b55",
-  "thread_id": "1a10650f4053fde5",
+  "message_id": "1a1068c79a90671a",
+  "thread_id": "1a1068b5ec00beb1",
   "preview": {
+    "from": "wesleybian@gmail.com",
     "to": "t6idetectives@gmail.com",
     "cc": "",
-    "subject": "Re: testing email",
-    "body": "Hi Andrew,\n\nYes, the MCP server works! This reply was sent through it.\n\nBest,\nWesley",
-    "in_reply_to_thread": "1a10650f4053fde5"
+    "subject": "Re: a test email",
+    "body": "Hi Andrew,\n\nYes, the MCP server works. I read your email and sent this reply through it.\n\nBest,\nWB",
+    "in_reply_to_thread": "1a1068b5ec00beb1"
   },
   "note": "Sent. Do not call again for this email or it will be sent twice."
 }
 Allowed by auto mode classifier
 
-                                                                                        02:57 AM claude-opus-5-5
-I sent the reply to Andrew (t6idetectives@gmail.com) in the "testing email" thread. Gmail accepted it, so the MCP server works for both reading and sending.
+                                                                                        03:53 AM claude-opus-5-5
+I sent your reply to Andrew (t6idetectives@gmail.com) in the "a test email" thread. It confirms the MCP server works and is signed "WB".
 ```
 
 **A failure, handled**: what you provoked, what the agent saw, what it did next:
