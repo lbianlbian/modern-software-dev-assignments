@@ -3,7 +3,7 @@
 ## Part I: The Server
 
 **API chosen**, and why:
-> TODO
+Google because I frequently use the GSuite applications like Gmail, Google Docs, and Google Sheets and these require OAuth 2.0. 
 
 **How to run it** (one command):
 ```
