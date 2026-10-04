@@ -52,3 +52,9 @@ Thumbs.db
 
 # Vercel
 .vercel/*
+
+# MCP / OAuth secrets
+.mcp.json
+token.json
+client_secret*.json
+credentials.json
