@@ -4,9 +4,9 @@
 
 | Repo | Language | Size | Age / activity |
 |---|---|---|---|
-| TODO | TODO | TODO | TODO |
-| TODO | TODO | TODO | TODO |
-| TODO | TODO | TODO | TODO |
+| dayjs | JavaScript (+ TS type defs) | Small: ~380 tracked files, ~9k lines in `src/` (core + ~40 plugins, ~150 locales) | Since Apr 2018; 1,657 commits, 364 contributors; 45 commits in the past year (last Sep 2026), maintenance mode |
+| htmx | JavaScript (+ HTML docs site) | Smallest code, biggest repo: ~680 files, ~5.4k lines in `src/`, most of the repo is the `www/` docs site (97 MB) | Since Apr 2020; 3,607 commits, 478 contributors; 136 commits in the past year (last Sep 2026), steady activity |
+| TheAlgorithms/Python | Python | Large: ~1,730 files, ~151k lines across ~1,600 independent `.py` modules | Since Jul 2016; 4,218 commits, 1,643 contributors; 604 commits in the past year (last Oct 2026), very active |
 
 
 ## Part I: Report Results
@@ -15,56 +15,71 @@
 
 | Repo | Maturity level | Blocking the next level | Pillar scores |
 |---|---|---|---|
-| TODO | TODO | TODO | TODO |
-| TODO | TODO | TODO | TODO |
-| TODO | TODO | TODO | TODO |
+| dayjs | 2/5 | At 25/65 scored criteria (38%; 19 skipped as N/A), it needs ~1–2 more passes to cross 40% for Level 3. Main gaps: no agent-facing docs (no AGENTS.md, skills, architecture doc, or from-clone build/setup instructions); tests and the library can't be run from a fresh checkout without undocumented setup; no type-checking or complexity/duplication tooling; no dev container or env template; no runtime observability (8 of 9 failed, mostly service-oriented checks); thin repo governance (no CODEOWNERS, Dependabot/Renovate, PR template, or issue labels). | Style & Validation 55%, Build System 50%, Testing 60%, Documentation 43%, Dev Environment 0%, Debugging & Observability 11%, Security 17%, Task Discovery 25%, Product & Experimentation 0% (overall 38%) |
+| htmx | 2/5 | Overall 25% (13 full passes + 9 half-credit partials over 69 scored criteria; 15 skipped). Reaching 40% for Level 3 needs ~10 more criteria's worth of credit, so it is much further from Level 3 than dayjs. Many criteria are scored over two "applications" (the library and the `www/` Zola site), and the site drags library-only passes down to 1/2. Main gaps: almost no style tooling (no pre-commit hooks, no strict typing, no complexity/dead/duplicate-code checks, lint/format/type-check skip `www/`); no build tooling (no size budget, unused-dependency check, release-note generator, or monorepo boundary between library and site); tests can't run from a fresh clone and have no coverage threshold; no agent docs (no AGENTS.md, skills, or architecture doc); no dev container or env template; nearly zero observability (1 partial out of 10); weak issue hygiene (no issue templates, no priority labels, 10% backlog health). | Style & Validation 14%, Build System 33%, Testing 45%, Documentation 43%, Dev Environment 0%, Debugging & Observability 5%, Security 25%, Task Discovery 25%, Product & Experimentation 0% (overall 25%) |
+| TheAlgorithms/Python | 3/5 | At 36/66 scored criteria (55%; 18 skipped), it needs 4 more passes (40/66 = 61%) to cross 60% for Level 4. It already has an AGENTS.md, dev container, pre-commit, Ruff with complexity/naming/dead-code rules, Dependabot, and CODEOWNERS, so the remaining gaps are narrower: build/install commands live only in CI, not in README/AGENTS.md; the ty type checker is advisory (`--exit-zero`, many rules ignored) instead of strict; no coverage threshold, integration tests, or explicit test naming config; `.github/skills` files lack the required SKILL.md frontmatter; no duplicate-code, file-size, module-boundary, or unused-dependency checks; no runtime observability (8 of 9 failed); issue labels lack priority/area taxonomy (22% backlog health). | Style & Validation 67%, Build System 54%, Testing 70%, Documentation 57%, Dev Environment 50%, Debugging & Observability 11%, Security 86%, Task Discovery 50%, Product & Experimentation 0% (overall 55%) |
 
 ### Failed criteria by pillar
 
-| Pillar | Repo 1 | Repo 2 | Repo 3 |
+| Pillar | dayjs | htmx | TheAlgorithms/Python |
 |---|---|---|---|
-| Style & Validation | TODO | TODO | TODO |
-| Build System | TODO | TODO | TODO |
-| Testing | TODO | TODO | TODO |
-| Documentation | TODO | TODO | TODO |
-| Dev Environment | TODO | TODO | TODO |
-| Code Quality | TODO | TODO | TODO |
-| Observability | TODO | TODO | TODO |
-| Security & Governance | TODO | TODO | TODO |
+| Style & Validation | Type Checker, Strict Typing, Cyclomatic Complexity, Duplicate Code Detection, Technical Debt Tracking | Pre-commit Hooks, Strict Typing, Naming Consistency, Cyclomatic Complexity, Large File Detection, Dead Code Detection, Duplicate Code Detection, Technical Debt Tracking; partial (1/2): Linter Configuration, Type Checker, Code Formatter | Strict Typing, Large File Detection, Duplicate Code Detection, Code Modularization Enforcement |
+| Build System | Build Command Documentation, Automated PR Review Generation, Build Performance Tracking, Deployment Frequency, Single Command Setup, Feature Flag Infrastructure, Unused Dependencies Detection | Build Command Documentation, Automated PR Review Generation, Fast CI Feedback, Build Performance Tracking, Deployment Frequency, Feature Flag Infrastructure, Release Notes Automation, Monorepo Tooling, Heavy Dependency Detection, Unused Dependencies Detection | Build Command Documentation, Automated PR Review Generation, Agentic Development, Feature Flag Infrastructure, Release Notes Automation, Unused Dependencies Detection |
+| Testing | Unit Tests Runnable, Flaky Test Detection, Interactive QA Exists, Interactive QA Runnable | Unit Tests Runnable, Flaky Test Detection, Test Coverage Thresholds; partial (1/2): Unit Tests Exist, Integration Tests Exist, Test Performance Tracking, Test File Naming Conventions, Test Isolation | Integration Tests Exist, Test Coverage Thresholds, Test File Naming Conventions |
+| Documentation | AGENTS.md File, Skills Configuration, Service Architecture Documented, AGENTS.md Freshness Validation | AGENTS.md File, Skills Configuration, Service Architecture Documented, AGENTS.md Freshness Validation | Skills Configuration, Service Architecture Documented, AGENTS.md Freshness Validation |
+| Development Environment | Dev Container, Environment Template | Dev Container, Environment Template | Environment Template |
+| Debugging & Observability | Structured Logging, Distributed Tracing, Metrics Collection, Error Tracking Contextualized, Alerting Configured, Runbooks Documented, Deployment Observability, Profiling Instrumentation | Structured Logging, Distributed Tracing, Metrics Collection, Error Tracking Contextualized, Alerting Configured, Runbooks Documented, Deployment Observability, Health Checks, Profiling Instrumentation; partial (1/2): Code Quality Metrics Dashboard | Structured Logging, Distributed Tracing, Metrics Collection, Error Tracking Contextualized, Alerting Configured, Runbooks Documented, Deployment Observability, Profiling Instrumentation |
+| Security | CODEOWNERS File, Dependency Update Automation, Gitignore Comprehensive, Sensitive Data Log Scrubbing, Minimum Dependency Release Age | CODEOWNERS File, Gitignore Comprehensive, DAST Scanning, Secrets Management, Sensitive Data Log Scrubbing, Minimum Dependency Release Age | Sensitive Data Log Scrubbing |
+| Task Discovery | Issue Labeling System, Backlog Health, PR Templates | Issue Templates, Issue Labeling System, Backlog Health | Issue Labeling System, Backlog Health |
+| Product & Experimentation | Product Analytics Instrumentation, Error to Insight Pipeline | Product Analytics Instrumentation, Error to Insight Pipeline | Product Analytics Instrumentation, Error to Insight Pipeline |
 
 ### The report's top remediation suggestions
 
+The report has no separate remediation list, so these are inferred from each failed criterion's rationale, ordered by how many failed criteria each fix would flip.
+
 | Repo | Suggestions |
 |---|---|
-| TODO | TODO |
-| TODO | TODO |
-| TODO | TODO |
+| dayjs | (1) Add a root AGENTS.md with from-clone install/build/test commands, covering AGENTS.md File, Build Command Documentation, Single Command Setup, and likely Environment Template. (2) Make tests and the library runnable from a fresh checkout: document `npm install` then `npm run build` before `require('.')`, covering Unit Tests Runnable and both Interactive QA criteria. (3) Add a `tsconfig`/`checkJs` type-check script in CI with `strict`, covering Type Checker and Strict Typing. (4) Add Dependabot/Renovate config plus a CODEOWNERS file and a `.env` line in `.gitignore`. (5) Add a PR template and apply area labels to open issues, covering PR Templates, Issue Labeling, and Backlog Health. |
+| htmx | (1) Add a root AGENTS.md documenting `npm install`, `npm run dist`, `npm test`, and `cd www && zola build/serve`, covering AGENTS.md File and Build Command Documentation. (2) Add pre-commit hooks (Husky/lint-staged) running ESLint and `types-check`, and turn on `--strict` for the existing checkJs. (3) Re-enable `no-unused-vars`/`camelcase` and add complexity and duplicate-code checks (ESLint `complexity`, jscpd). (4) Add a coverage threshold to Web Test Runner and a size budget (size-limit) on `dist/htmx.min.js`, covering Test Coverage Thresholds and Heavy Dependency Detection. (5) Add issue templates, a priority label set, a CODEOWNERS file, and `.env` in `.gitignore`. |
+| TheAlgorithms/Python | (1) Document the install/test commands (`uv sync --group=test`, `uv run pytest`) in README and AGENTS.md instead of only in CI, covering Build Command Documentation and likely Environment Template (state that no env vars are needed). (2) Add `--cov-fail-under` to the pytest config so the coverage CI already collects becomes a gate, covering Test Coverage Thresholds. (3) Add name/description YAML frontmatter to the three existing `.github/skills/*/SKILL.md` files, covering Skills Configuration. (4) Make ty blocking (drop `--exit-zero`/`continue-on-error`) and stop ignoring core rule categories, covering Strict Typing. (5) Set explicit `python_files`/`python_functions` in `[tool.pytest.ini_options]`, covering Test File Naming Conventions. |
 
 ### Raw output
 
 ```
-TODO
+See {dayjs, htmx, python}-readiness-report.md for the raw output of the Factory Agent Readiness Reports. 
 ```
 
 
 ## Part II: Analysis
 
 **Which pillars failed most**, and were failures consistent across all three or specific to one?
-> TODO
+> **Consistent across all three:** Product & Experimentation (0% / 0% / 0%) and Debugging & Observability (11% / 5% / 11% for dayjs / htmx / Python) are the bottom two pillars in every repo. In total, 23 criteria fail in all three repos: all 8 runtime-observability checks (structured logging, tracing, metrics, error tracking, alerting, runbooks, deployment observability, profiling), both Product criteria, and 13 more (Strict Typing, Duplicate Code Detection, Build Command Documentation, Automated PR Review Generation, Feature Flag Infrastructure, Unused Dependencies Detection, Environment Template, Sensitive Data Log Scrubbing, Issue Labeling System, Backlog Health, Skills Configuration, Service Architecture Documented, AGENTS.md Freshness Validation). That is 23 of Python's 30 failures, 23 of dayjs's 40, and 23 of htmx's 56, so most of the best repo's failures are shared ones.
+>
+> **Specific to one or two repos:** the pillars that actually separate the repos are Security (17% / 25% / 86%), Style & Validation (55% / 14% / 67%) and Development Environment (0% / 0% / 50%). Python alone has Dependabot with a cooldown, CODEOWNERS, a `.env` gitignore entry, a dev container and an AGENTS.md. htmx's Style & Validation score is uniquely low: it fails 8 of 11 outright and gets half credit on the other 3, because its ESLint config disables `camelcase` and `no-unused-vars` and its lint, format and type-check targets skip the `www/` site. Both JavaScript repos fail Unit Tests Runnable, and Python passes it.
 
 **What explains the pattern?** Which suspects your data supports, and which it cannot distinguish:
-> TODO
+> - **Repo type (library vs. deployed service) explains the shared failures.** Of the 23 criteria all three fail, about 13 assume a running service with users: the 8 observability checks, both Product criteria, Feature Flags, Log Scrubbing and Service Architecture. None of the three repos is a service, so these failures say more about the rubric than about the repos. I can't confirm this without scoring a service repo, but it's the only thing all three have in common that the failing criteria depend on.
+> - **Contributor structure fits the ranking best.** Python (55%) has 1,643 contributors, and its top author wrote only about 6% of its commits. The repo is clearly built for strangers' PRs: it has pre-commit, PR and issue templates, an AGENTS.md that warns about the `algorithms-keeper` bot closing PRs, and review skills. dayjs (38%, about 39% of commits by `iamkun`) and htmx (25%, about 47% by Carson Gross under two aliases) are mostly run by one maintainer, and each is missing exactly that process layer: CODEOWNERS, labels, templates and agent docs. This fits the data, but with one community repo against two single-maintainer ones it is a hypothesis, not a finding. None of the three is corporate-backed, so corporate vs. volunteer can't be tested at all.
+> - **Age and size line up but can't be separated.** The oldest (2016) and largest (about 151k lines) repo scores highest, and the youngest (2020) scores lowest. But age, size, contributor count and language all change together in this sample, and with only 3 repos, a perfect rank match happens 1 time in 6 by chance.
+> - **Recent activity is contradicted.** htmx is about 3× as active as dayjs (136 vs. 45 commits in the past year) yet scores 13 points lower, so recent activity doesn't predict the score here.
+> - **Language explains specific criteria, not the overall level.** Python is the only repo whose tests could be collected without installing anything, because the sampled test uses only the standard library. Both Node repos failed Unit Tests Runnable only because `node_modules` was absent. That is an effect of the ecosystem plus the audit setup. With only one Python repo, I can't say whether language matters beyond these specific runnability checks.
+> - **Repo layout is a suspect the framework creates.** htmx is scored as two applications (the library and the `www/` docs site), so library-only passes drop to 1/2. Nine of its 22 credited criteria are half credit, and that layout is part of why it ranks last.
 
 **Cheapest high-leverage fix**, per repo:
 
 | Repo | The one change | Why this one, over the report's top suggestion |
 |---|---|---|
-| TODO | TODO | TODO |
-| TODO | TODO | TODO |
-| TODO | TODO | TODO |
+| dayjs | A short AGENTS.md that spells out the edit/test loop and its traps: edit only `src/`; run `npm ci` first; iterate with `npx jest test/<file>.test.js`; the full `npm test` reruns Jest under 9 time-zone settings and enforces **100% line coverage**, so any new branch needs a test or CI fails; and `require('dayjs')` resolves to the git-ignored `dayjs.min.js`, so a scratch script needs `npm run build` first. | The report would credit any AGENTS.md that mentions a build command, and points elsewhere at Type Checker and Strict Typing as the main Style & Validation gaps. But dayjs's types are hand-written `.d.ts` files, so a `tsc` setup would mostly check those declarations and barely helps an agent editing `src/`. What actually trips up an agent is not knowing that only the full `npm test` checks coverage (a single-file Jest run passes, then CI fails on untested lines), and the build-only entry point. Those are the facts the file needs, and documenting them takes minutes. |
+| htmx | An AGENTS.md that tells the agent which copy to edit: `src/htmx.js` is the only source; the 32 committed files in `dist/` come from `npm run dist`; `www/static/test` mirrors `test/`; and `npm run test:chrome` needs a Playwright Chromium download. | htmx loses the most points in Style & Validation (pre-commit, strict typing, complexity, dead-code checks). Enabling strict `checkJs` or `no-unused-vars` on a single 5.4k-line untyped file means weeks of cleanup and would raise the score more than an agent's success rate. The risk that actually hurts agents is three copies of the core code and tests, where editing the wrong one silently does nothing. One file fixes that. |
+| TheAlgorithms/Python | Add `name`/`description` YAML frontmatter to the three existing `.github/skills/*/SKILL.md` files (code-review, new-pull-request, review-open-issue). | The top inferred suggestion, documenting `uv sync --group=test`, adds little for an agent, because AGENTS.md already gives `uvx pytest your_file.py --doctest-modules` and `uvx pre-commit run --all-files`. The skills already contain the most valuable knowledge (how to get past `algorithms-keeper`, which closes non-conforming PRs), but without frontmatter, skill-aware agents can't find them or decide when to load them. It's about 6 lines of metadata that make existing content usable. |
 
 **Where the framework falls short:**
-> TODO
+> 1. **Observability is weighted for services but applied to libraries.** It is the second-largest pillar after Build System (9–10 scored criteria per repo, about 14% of the scored total), it barely varies (11% / 5% / 11%), and almost none of it affects whether an agent can make a correct change to a library. It lowers all three scores by about the same amount without telling them apart, so it matters far less than its weight. Skipping is also inconsistent: Health Checks and Circuit Breakers are N/A for dayjs and Python, yet htmx scores 0/2 on Health Checks because its docs site is a static Netlify deploy. Structured Logging, Alerting and Runbooks are never skipped for any library.
+> 2. **It checks for files, not for what's in them.** Python fails Build Command Documentation even though its AGENTS.md gives exact `uvx pytest` and `pre-commit` commands; the check wanted an install command, but this repo has no build step. Python's skills fail only for missing frontmatter, even though their content is the best agent documentation in the sample. Meanwhile, any 100-character AGENTS.md would pass AGENTS.md File for dayjs or htmx.
+> 3. **"Runnable" checks depend on the audit environment.** dayjs and htmx fail Unit Tests Runnable because the auditor didn't install dependencies, while Python passes because its sampled test needs only the standard library. That penalizes every repo with dependencies. It's also inconsistent: htmx passes Interactive QA Runnable on a "documentation fallback" after both live attempts failed.
+> 4. **It misses hazards that clearly affect agents.** These include committed build output next to the source (htmx `dist/`), a single 5k-line core file, mirrored test trees, and a package entry point that is a git-ignored build artifact (dayjs). Agentic Development measures whether AI co-authors appear in recent commits, which is about use, not readiness: Python fails it despite having the only AGENTS.md and skills in the sample.
+>
+> Scope: these are three library-style repos (two JavaScript, one Python, none corporate-backed), each scored once. The claims about service-shaped criteria and contributor structure are hypotheses consistent with this sample, not general results.
 
 
 ## Submission
