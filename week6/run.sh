@@ -16,10 +16,23 @@ set -euo pipefail
 TASK_FILE="${1:?usage: ./run.sh <task-file>}"
 cd "$(dirname "$0")"
 
-rm -f writeup.md assignment.md
+rm -f writeup.md assignment.md rate_card.json
 
-claude -p "$(cat "$TASK_FILE")" \
-  --model claude-sonnet-5-5 \
+# Describe the evidence packet before the agent starts: each file's format and its
+# malformed and duplicate line counts, in out/generic_malformed_duplicate_check.json. Deterministic and
+# free (no model calls); a failure here must not stop the run.
+mkdir -p out
+{ command -v python3 >/dev/null && PY=python3 || PY=python; } 2>/dev/null
+"$PY" tools/generic_malformed_duplicate_check.py || echo "generic_malformed_duplicate_check failed; the agent will apply evidence.md itself" >&2
+
+# The grader only scores runs whose run.sh exits within 10 minutes, so stop the
+# agent at 9 (-k: force-kill 15s later if it ignores SIGTERM). Whatever it has
+# written to app/services and out/ by then is what gets scored.
+# Loop/wait tools have no use in a one-shot headless run and kept a finished
+# session alive in practice, so they are disabled.
+timeout -k 15 540 claude -p "$(cat "$TASK_FILE")" \
+  --model claude-haiku-5-5 \
   --effort high \
   --permission-mode bypassPermissions \
-  --output-format stream-json --verbose
+  --disallowedTools "ScheduleWakeup CronCreate Monitor" \
+  --output-format stream-json --verbose || echo "claude exited with status $? (124 = stopped at 9 minutes)" >&2
