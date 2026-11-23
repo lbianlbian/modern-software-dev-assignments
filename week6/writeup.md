@@ -30,6 +30,7 @@ Run the provided `run.sh` on the starter incident (`python tools/practice.py`). 
 
 ## Part II: Experiments
 
+### Run result 2
 on graded run, most recent setup got 
 run.sh exited with code 0 after 297.8s
 repair 1.00
@@ -42,6 +43,24 @@ the run did not pass (a pass needs repair 1.00 and impact 1.00)
 cost $0.0509, model requests: 12
   claude-haiku-5-5: $0.0509  in 24  out 58,797  cache read 687,798  cache write 116,988
 cost is scored only for a run that passes
+
+### Run result 3
+run.sh exited with code 0 after 322.9s
+repair 0.76
+  incident    13 of 17 scenarios passed
+  regressions 51 of 51 scenarios passed
+  compat      8 of 8 scenarios passed
+impact 1.00
+the run did not pass (a pass needs repair 1.00 and impact 1.00)
+
+cost $0.0632, model requests: 17
+  claude-haiku-5-5: $0.0632  in 34  out 66,182  cache read 1,251,543  cache write 141,010
+baseline $1.5000; full credit at or below $0.7500
+
+Still have 2 more tries
+try one claude session for impact and one claude session for repair
+try fresh sessions for review, maybe different model/provider
+maybe play around with higher effort, still have a max effort setting not used
 
 
 One row per change you tried, including the ones you dropped. Try to run each change a few times to check its reliability; report how many runs you made.
