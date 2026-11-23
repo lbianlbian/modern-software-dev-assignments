@@ -25,14 +25,32 @@ mkdir -p out
 { command -v python3 >/dev/null && PY=python3 || PY=python; } 2>/dev/null
 "$PY" tools/generic_malformed_duplicate_check.py || echo "generic_malformed_duplicate_check failed; the agent will apply evidence.md itself" >&2
 
-# The grader only scores runs whose run.sh exits within 10 minutes, so stop the
-# agent at 9 (-k: force-kill 15s later if it ignores SIGTERM). Whatever it has
-# written to app/services and out/ by then is what gets scored.
+# The logs in incident/ came from the code as it is now. The repair session edits
+# app/services while the impact session may read it, so keep an untouched copy for
+# the impact session. A failure here must not stop the run.
+rm -rf out/original_services
+cp -r app/services out/original_services || echo "could not copy app/services; the impact session will read app/services" >&2
+
+# Two sessions run in parallel, each owning one deliverable: the repair session
+# changes app/services, the impact session writes out/impact.json. The report is
+# computed from incident/ alone, so neither waits on the other, and each gets
+# the whole time limit. No timeout here: the grader (and practice.py) stop the
+# process group at 10 minutes and score whatever is on disk.
 # Loop/wait tools have no use in a one-shot headless run and kept a finished
 # session alive in practice, so they are disabled.
-timeout -k 15 540 claude -p "$(cat "$TASK_FILE")" \
-  --model claude-haiku-5-5 \
-  --effort high \
-  --permission-mode bypassPermissions \
-  --disallowedTools "ScheduleWakeup CronCreate Monitor" \
-  --output-format stream-json --verbose || echo "claude exited with status $? (124 = stopped at 9 minutes)" >&2
+# Each line of output is prefixed with the session name so agent.log stays readable.
+run_session() {
+  local name=$1 role=$2
+  claude -p "$(cat "$role")
+$(cat "$TASK_FILE")" \
+    --model claude-haiku-5-5 \
+    --effort high \
+    --permission-mode bypassPermissions \
+    --disallowedTools "ScheduleWakeup CronCreate Monitor" \
+    --output-format stream-json --verbose 2>&1 | sed -u "s/^/[$name] /" \
+    || echo "[$name] claude exited with status $?" >&2
+}
+
+run_session impact prompts/impact.md &
+run_session repair prompts/repair.md &
+wait
