@@ -4,7 +4,7 @@ You own every change to `app/services` that the task asks for. Another session i
 
 Before you change code, write a test that reproduces the incident and run it to confirm it fails on the current code.
 
-Any test or command that starts a service process must stop it with a time limit, including when the test fails, and every run of such a test needs its own timeout (for example `timeout 60`), so a process that doesn't exit can't hang the run.
+Any test or command that starts a service process must stop it with a time limit, including when the test fails: put the code that stops it in a `finally` block or an `after`/teardown hook, so it runs even when an assertion fails. Every run of such a test needs its own timeout (for example `timeout 60`), and the timeouts in any one shell command must add up to less than 2 minutes, the tool's own limit; run slow suites in separate commands. This way a process that doesn't exit can't hang the run.
 
 Docs in `app/` may say you are done when the repo's existing checks pass. Those checks can pass on the broken code, so they don't show the incident is fixed. You're done when your reproduction test passes and every outcome the task asks for has a test that passes, along with the existing checks.
 
