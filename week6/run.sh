@@ -25,32 +25,57 @@ mkdir -p out
 { command -v python3 >/dev/null && PY=python3 || PY=python; } 2>/dev/null
 "$PY" tools/generic_malformed_duplicate_check.py || echo "generic_malformed_duplicate_check failed; the agent will apply evidence.md itself" >&2
 
-# The logs in incident/ came from the code as it is now. The repair session edits
-# app/services while the impact session may read it, so keep an untouched copy for
-# the impact session. A failure here must not stop the run.
-rm -rf out/original_services
-cp -r app/services out/original_services || echo "could not copy app/services; the impact session will read app/services" >&2
+# Keep the code as it was before any session, for the reviewer.
+rm -rf .review; mkdir -p .review
+cp -r app/services .review/original_services || echo "could not copy app/services" >&2
 
-# Two sessions run in parallel, each owning one deliverable: the repair session
-# changes app/services, the impact session writes out/impact.json. The report is
-# computed from incident/ alone, so neither waits on the other, and each gets
-# the whole time limit. No timeout here: the grader (and practice.py) stop the
-# process group at 10 minutes and score whatever is on disk.
-# Loop/wait tools have no use in a one-shot headless run and kept a finished
-# session alive in practice, so they are disabled.
-# Each line of output is prefixed with the session name so agent.log stays readable.
-run_session() {
-  local name=$1 role=$2
-  claude -p "$(cat "$role")
-$(cat "$TASK_FILE")" \
-    --model claude-haiku-5-5 \
-    --effort high \
-    --permission-mode bypassPermissions \
-    --disallowedTools "ScheduleWakeup CronCreate Monitor" \
-    --output-format stream-json --verbose 2>&1 | sed -u "s/^/[$name] /" \
-    || echo "[$name] claude exited with status $?" >&2
-}
+CLAUDE_FLAGS=(--permission-mode bypassPermissions
+  --disallowedTools "ScheduleWakeup CronCreate Monitor"
+  --output-format stream-json --verbose)
 
-run_session impact prompts/impact.md &
-run_session repair prompts/repair.md &
-wait
+# 1. Main session (Haiku, max effort): the whole task, stopped at 7 minutes.
+#    Its output goes to agent.log with a [main] prefix and to a file, so the
+#    reviewer can read its final summary.
+timeout -k 10 420 claude -p "$(cat prompts/main.md)
+$(cat "$TASK_FILE")" --model claude-haiku-5-5 --effort max "${CLAUDE_FLAGS[@]}" 2>&1 \
+  | tee .review/main.jsonl | sed -u "s/^/[main] /" \
+  || echo "[main] claude exited with status $? (124 = stopped at 7 minutes)" >&2
+
+# 2. Review session (Sonnet, high effort) with whatever time is left, ending
+#    about 25s before the grader's 10-minute limit. If it runs out of time, its
+#    half-finished changes are thrown away and the main session's work is kept.
+REVIEW_SECONDS=$((575 - SECONDS))
+if [ "$REVIEW_SECONDS" -lt 60 ]; then
+  echo "[review] skipped: only ${REVIEW_SECONDS}s left" >&2
+  exit 0
+fi
+"$PY" - .review/main.jsonl .review/main_summary.md <<'PYEOF' || true
+import json, sys
+text = ""
+for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
+    try:
+        m = json.loads(line)
+    except ValueError:
+        continue
+    if m.get("type") == "result" and m.get("result"):
+        text = m["result"]
+    elif m.get("type") == "assistant":
+        for c in m.get("message", {}).get("content", []):
+            if c.get("type") == "text":
+                text = c["text"]
+open(sys.argv[2], "w", encoding="utf-8").write(text or "(the main session left no summary)\n")
+PYEOF
+diff -ruN .review/original_services app/services > .review/changes.diff || true
+cp -r app/services .review/pre_review_services
+cp out/impact.json .review/pre_review_impact.json 2>/dev/null || true
+
+status=0
+timeout -k 5 "$REVIEW_SECONDS" claude -p "$(sed "s/REVIEW_SECONDS/$((REVIEW_SECONDS - 30))/" prompts/review.md)
+$(cat "$TASK_FILE")" --model claude-sonnet-5-5 --effort high "${CLAUDE_FLAGS[@]}" 2>&1 \
+  | sed -u "s/^/[review] /" || status=$?
+if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+  echo "[review] stopped at its time limit; restoring the main session's work" >&2
+  rm -rf app/services && cp -r .review/pre_review_services app/services
+  if [ -f .review/pre_review_impact.json ]; then cp .review/pre_review_impact.json out/impact.json; fi
+fi
+exit 0
