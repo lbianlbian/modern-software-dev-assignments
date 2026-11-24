@@ -68,6 +68,8 @@ for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
 open(sys.argv[2], "w", encoding="utf-8").write(text or "(the main session left no summary)\n")
 PYEOF
 diff -ruN .review/original_services app/services > .review/changes.diff || true
+bash tools/suites_pass.sh baseline || true
+sed "s/^/[review] suite passing before review: /" .review/baseline_suites || true
 mkdir -p .review/checkpoint
 cp -r app/services .review/checkpoint/services
 cp out/impact.json .review/checkpoint/impact.json 2>/dev/null || true
@@ -78,10 +80,13 @@ $(cat "$TASK_FILE")" --model claude-sonnet-5-5 --effort high --settings prompts/
   || echo "[review] claude exited with status $? (124 = stopped at its time limit)" >&2
 
 sed "s/^/[review hook] /" .review/checkpoints.log 2>/dev/null || echo "[review hook] never ran"
-if bash tools/suites_pass.sh; then
+rc=0; bash tools/suites_pass.sh || rc=$?
+if [ "$rc" -eq 0 ]; then
   echo "[review] final code passes the suites; keeping it" >&2
+elif [ "$rc" -eq 2 ]; then
+  echo "[review] no suite passed before the review, so nothing to check against; keeping the final code" >&2
 else
-  echo "[review] final code fails the suites; restoring the last checkpoint" >&2
+  echo "[review] final code fails a suite that passed before the review; restoring the last checkpoint" >&2
   if [ -d .review/checkpoint/services ]; then
     rm -rf app/services && cp -r .review/checkpoint/services app/services
   fi
