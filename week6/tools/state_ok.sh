@@ -16,11 +16,11 @@ cd "$(dirname "$0")/.." || exit 1
 
 run_suite() {  # $1 = service directory
   if [ -f "$1/package.json" ]; then
-    (cd "$1" && timeout -k 5 45 npm test >/dev/null 2>&1)
+    (cd "$1" && timeout -k 5 30 npm test >/dev/null 2>&1)
   elif [ -f "$1/Makefile" ]; then
-    (cd "$1" && timeout -k 5 45 make test >/dev/null 2>&1)
+    (cd "$1" && timeout -k 5 30 make test >/dev/null 2>&1)
   elif [ -f "$1/go.mod" ]; then
-    (cd "$1" && timeout -k 5 45 go test ./... >/dev/null 2>&1)
+    (cd "$1" && timeout -k 5 30 go test ./... >/dev/null 2>&1)
   else
     return 1
   fi
@@ -30,7 +30,7 @@ services_start() {  # start everything on a spare port range, then stop it all
   [ -f app/bin/up ] || return 1
   local state rc=0 pid
   state=$(mktemp -d)
-  setsid timeout -k 5 90 "$PY" app/bin/up --state "$state" --port-base $((20000 + RANDOM % 20000)) >/dev/null 2>&1 &
+  setsid timeout -k 5 40 "$PY" app/bin/up --state "$state" --port-base $((20000 + RANDOM % 20000)) >/dev/null 2>&1 &
   pid=$!
   wait "$pid" || rc=1
   # Each service runs in its own session, so stop them by the state directory

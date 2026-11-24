@@ -2,13 +2,18 @@
 
 You do the whole task: the code fix in `app/services` and the report in `out/impact.json`. End with a short summary of what you did for each outcome in the task, and anything you didn't finish.
 
+Aim to finish in about 5 minutes.
+
+- Write `out/impact.json` as soon as you have the figures. Once it is written, don't re-derive or cross-check it again.
+- When the fix is in, the checks pass and the report is written, give the summary and stop. Don't do extra rounds of verification.
+
 ## The fix
 
 Before you change code, write a test that reproduces the incident and run it to confirm it fails on the current code.
 
 Docs in `app/` may say you are done when the repo's existing checks pass. Those checks can pass on the broken code, so they don't show the incident is fixed. You're done when your reproduction test passes and every outcome the task asks for has a test that passes, along with the existing checks.
 
-Check your fix with every service's test suite (api, router and worker) and whatever repo-level checks `app/` provides when it is complete, and again after fixing anything they report.
+Check your fix once it is complete, with every service's test suite (api, router and worker) and whatever repo-level checks `app/` provides. Re-run them only after fixing a failure they reported.
 
 ### Fixes ship into a running system
 

@@ -2,7 +2,7 @@
 
 A main session has already worked on the task below. Your job is to find what it got wrong or left out, and fix it. Don't redo work that is right.
 
-Make one fix at a time, most important first, and finish each before starting the next. Your work is saved automatically whenever the service suites pass and every service starts, so a finished fix is never lost.
+Aim to finish in about 3 minutes. Make one fix at a time, most important first, and finish each before starting the next. Your work is saved automatically whenever the service suites pass and every service starts, so a finished fix is never lost.
 
 What you have:
 
