@@ -1,9 +1,5 @@
 # Working notes
 
-## Two sessions, one after the other
-
-`run.sh` runs a main session that does the whole task, then a review session that checks the main session's work against the task and fixes what is missing. Your prompt says which one you are and how much time you have.
-
 ## Use few turns
 
 Every turn re-sends the whole conversation, so the number of turns drives cost.
@@ -11,13 +7,11 @@ Every turn re-sends the whole conversation, so the number of turns drives cost.
 - Batch: put related shell commands in one call (chain with `;`, label output with `echo "== name"`), e.g. inspect several files or run several checks at once.
 - Make all edits to a file in one write rather than many small edits.
 - Don't re-read files you have already seen.
-- When every outcome you own is done and checked, give a short summary and stop.
+- When every outcome in the task is done and checked, give a short summary and stop.
 
-## Time
+## Background work
 
-The whole run is killed at 10 minutes, and only what is on disk by then counts. Each session also has its own limit, given in its prompt. Write output files as soon as you have them, then improve them.
-
-- Don't run anything in the background, and don't wait on background work. Run subagents in the foreground.
+Don't run anything in the background, and don't wait on background work. Run subagents in the foreground.
 
 ## What to trust
 

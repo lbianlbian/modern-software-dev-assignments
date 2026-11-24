@@ -33,7 +33,8 @@ CLAUDE_FLAGS=(--permission-mode bypassPermissions
   --disallowedTools "ScheduleWakeup CronCreate Monitor"
   --output-format stream-json --verbose)
 
-# 1. Main session (Haiku, high effort): the whole task, stopped at 7 minutes.
+# 1. Main session (Haiku, high effort): the whole task, stopped at 7 minutes
+#    (a backstop; its prompt says nothing about time or the review).
 #    Its output goes to agent.log with a [main] prefix and to a file, so the
 #    reviewer can read its final summary.
 timeout -k 10 420 claude -p "$(cat prompts/main.md)
@@ -42,9 +43,10 @@ $(cat "$TASK_FILE")" --model claude-haiku-5-5 --effort high "${CLAUDE_FLAGS[@]}"
   || echo "[main] claude exited with status $? (124 = stopped at 7 minutes)" >&2
 
 # 2. Review session (Sonnet, high effort) with whatever time is left, until about
-#    565s. A hook (prompts/review_settings.json) saves a checkpoint after each
-#    edit that leaves every service's suite passing. At the end, if the final
-#    code fails the suites, the latest checkpoint (or the main session's work)
+#    565s (its prompt says nothing about time). A hook (prompts/review_settings.json)
+#    saves a checkpoint after each tool call that leaves the suites passing and
+#    every service starting (tools/state_ok.sh). At the end, if the final code
+#    fails those checks, the latest checkpoint (or the main session's work)
 #    is restored. That leaves ~30s before the grader's 10-minute limit.
 REVIEW_SECONDS=$((565 - SECONDS))
 if [ "$REVIEW_SECONDS" -lt 60 ]; then
@@ -68,25 +70,25 @@ for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
 open(sys.argv[2], "w", encoding="utf-8").write(text or "(the main session left no summary)\n")
 PYEOF
 diff -ruN .review/original_services app/services > .review/changes.diff || true
-bash tools/suites_pass.sh baseline || true
-sed "s/^/[review] suite passing before review: /" .review/baseline_suites || true
+bash tools/state_ok.sh baseline || true
+sed "s/^/[review] check passing before review: /" .review/baseline_checks || true
 mkdir -p .review/checkpoint
 cp -r app/services .review/checkpoint/services
 cp out/impact.json .review/checkpoint/impact.json 2>/dev/null || true
 
-timeout -k 5 "$REVIEW_SECONDS" claude -p "$(sed "s/REVIEW_SECONDS/$((REVIEW_SECONDS - 20))/" prompts/review.md)
+timeout -k 5 "$REVIEW_SECONDS" claude -p "$(cat prompts/review.md)
 $(cat "$TASK_FILE")" --model claude-sonnet-5-5 --effort high --settings prompts/review_settings.json \
   "${CLAUDE_FLAGS[@]}" 2>&1 | sed -u "s/^/[review] /" \
   || echo "[review] claude exited with status $? (124 = stopped at its time limit)" >&2
 
 sed "s/^/[review hook] /" .review/checkpoints.log 2>/dev/null || echo "[review hook] never ran"
-rc=0; bash tools/suites_pass.sh || rc=$?
+rc=0; bash tools/state_ok.sh || rc=$?
 if [ "$rc" -eq 0 ]; then
-  echo "[review] final code passes the suites; keeping it" >&2
+  echo "[review] final code passes the checks; keeping it" >&2
 elif [ "$rc" -eq 2 ]; then
-  echo "[review] no suite passed before the review, so nothing to check against; keeping the final code" >&2
+  echo "[review] no check passed before the review, so nothing to check against; keeping the final code" >&2
 else
-  echo "[review] final code fails a suite that passed before the review; restoring the last checkpoint" >&2
+  echo "[review] final code fails a check that passed before the review; restoring the last checkpoint" >&2
   if [ -d .review/checkpoint/services ]; then
     rm -rf app/services && cp -r .review/checkpoint/services app/services
   fi

@@ -1,8 +1,6 @@
-# You are the main session
+# How to work on this task
 
-You do the whole task: the code fix in `app/services` and the report in `out/impact.json`. You are stopped after 7 minutes. After that, a review session checks your work, so end with a short summary of what you did for each outcome in the task and anything you didn't finish.
-
-Write `out/impact.json` as soon as you have the figures, then go on with the fix.
+You do the whole task: the code fix in `app/services` and the report in `out/impact.json`. End with a short summary of what you did for each outcome in the task, and anything you didn't finish.
 
 ## The fix
 
