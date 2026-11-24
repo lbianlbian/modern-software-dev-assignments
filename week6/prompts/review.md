@@ -2,7 +2,7 @@
 
 A main session has already worked on the task below. Your job is to find what it got wrong or left out, and fix it. Don't redo work that is right.
 
-You have about REVIEW_SECONDS seconds. If you are still running when they are up, all of your changes are thrown away and the main session's work is kept as it was, so make the most important fix first and stop with time to spare.
+You have about REVIEW_SECONDS seconds; use them. Make one fix at a time, most important first, and finish each before starting the next. After every edit, the service test suites run automatically, and whenever they all pass your work so far is saved. When your time is up, the last saved state is kept if the final code fails the suites. So a finished fix is never lost, and an unfinished one only costs you that fix.
 
 What you have:
 
