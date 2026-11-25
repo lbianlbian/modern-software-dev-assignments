@@ -30,52 +30,6 @@ Run the provided `run.sh` on the starter incident (`python tools/practice.py`). 
 
 ## Part II: Experiments
 
-### Run result 2
-on graded run, most recent setup got 
-run.sh exited with code 0 after 297.8s
-repair 1.00
-  incident    17 of 17 scenarios passed
-  regressions 51 of 51 scenarios passed
-  compat      8 of 8 scenarios passed
-impact 0.93
-the run did not pass (a pass needs repair 1.00 and impact 1.00)
-
-cost $0.0509, model requests: 12
-  claude-haiku-5-5: $0.0509  in 24  out 58,797  cache read 687,798  cache write 116,988
-cost is scored only for a run that passes
-
-### Run result 3
-run.sh exited with code 0 after 322.9s
-repair 0.76
-  incident    13 of 17 scenarios passed
-  regressions 51 of 51 scenarios passed
-  compat      8 of 8 scenarios passed
-impact 1.00
-the run did not pass (a pass needs repair 1.00 and impact 1.00)
-
-cost $0.0632, model requests: 17
-  claude-haiku-5-5: $0.0632  in 34  out 66,182  cache read 1,251,543  cache write 141,010
-baseline $1.5000; full credit at or below $0.7500
-
-### Run result 4
-
-run.sh exited with code 0 after 333.8s
-repair 0.76
-  incident    13 of 17 scenarios passed
-  regressions 51 of 51 scenarios passed
-  compat      8 of 8 scenarios passed
-impact 0.63
-the run did not pass (a pass needs repair 1.00 and impact 1.00)
-
-cost $0.1003, model requests: 24
-  claude-haiku-5-5: $0.1003  in 48  out 111,220  cache read 1,664,216  cache write 224,288
-baseline $1.5000; full credit at or below $0.7500
-
-Still have 1 more try
-try fresh sessions for review, maybe different model/provider
-maybe play around with higher effort, still have a max effort setting not used
-
-
 One row per change you tried, including the ones you dropped. Try to run each change a few times to check its reliability; report how many runs you made.
 
 | #   | Change | Why you expected it to help | Runs passed / attempted | Avg repair / impact | Avg cost | Kept? |
@@ -99,32 +53,42 @@ One row per change you tried, including the ones you dropped. Try to run each ch
 | 17  | On top of #16: the reviewer is judged only by suites that passed before the review. run.sh records which suites pass on the main session's output, and the hook and the final check require only those; if none pass, the final code is kept and never restored. Suites are found by `package.json`, `Makefile` or `go.mod`, not by name | The grader replaces `app/`, so the held-out repo might run tests differently. A suite that can't run there would block every checkpoint and force a restore that throws away a correct review fix | 2/2 | 1.00 / 1.00 | $0.3255 | Kept the change, but the runs say more about variance than about it. It changes nothing on the starter, where all three suites pass before the review. Both runs passed with 6/6 figures in 145-166s. The main session again quit after 70-91s with a partial fix ("I ran out of time before finishing the fix"). This time the reviewer finished it in about 70s: it added the router-side cancellation, and in both runs the old-release scenarios passed. The hook again never fired (edits through Bash), and the final check kept the code. With the same prompts as #16, which failed both runs, this means the result depends on whether Sonnet completes the fix in one short pass; 2 of 4 such runs did. Sonnet was about $0.30 of each $0.33 |
 | 18  | On top of #17: no prompt mentions time or the review. CLAUDE.md's time section is gone, the main prompt never mentions a reviewer, and the review prompt never mentions time (run.sh still stops the main session at 7 minutes and the reviewer at about 565s). The checkpoint hook fires after every tool call, Bash included, skipping the checks when a hash of `app/services` and `out/impact.json` hasn't changed. The checks (`tools/state_ok.sh`) add starting every service with `app/bin/up` and waiting for its health check, since in #16 the api's unit suite passed on an api that couldn't start | In #15-#17 both models quit early once told about a time limit or a reviewer ("Time is short… I'm stopping"), while the single-session runs before them finished in time with no such wording. The hook never fired in #16-#17 because Sonnet edits through Bash | 1/2 | 1.00 / 0.97 | $0.6239 | No, as it stands. Neither model quit early any more, and repair was 9/9 in both runs, but both sessions now ran until they were stopped: the main session at 7 minutes (24 and 44 tool calls, run 1 still digging into corrupted egress lines) and the reviewer at its limit. Runs ended at 572-575s, about 25s from the grader's limit, and cost $0.60-0.65 (Sonnet $0.50-0.54), close to the $0.75 full-credit line. Run 2 got 5/6 figures (impact 0.93). The hook now works: it saved two checkpoints per run, and the final check passed and kept the code. Without any time wording the main session doesn't stop by itself. The "about 8 minutes" budget in #9/#10 was what kept it short; what made the models quit in #15-#17 was the 7-minute and reviewer wording |
 | 19  | On top of #18: the main prompt gets a soft budget and #10's stopping rules back ("Aim to finish in about 5 minutes"; write `out/impact.json` as soon as you have the figures and don't re-derive or cross-check it; check the fix once, re-run only after a reported failure; no extra rounds of verification), still with no mention of the review or a cut-off. The review prompt says "Aim to finish in about 3 minutes". run.sh stops the reviewer at about 520s instead of 565s, kills a hook still running when it does, caps the final check at 45s (30s per suite, 40s for the start check), restores the checkpoint if the check fails or hangs, and restores by copying to a temporary folder and swapping it in, so `app/services` is never missing if the run is stopped part-way | In #18 both sessions ran until stopped and the run ended about 25s from the grader's limit. #10's "about 8 minutes" budget and stopping rules were what kept the single session short, and the early quitting in #15-#17 came from the 7-minute and reviewer wording, not from time wording in general | 1/2 | 1.00 / 0.50 | $0.5002 | No. Repair was 9/9 in both runs and the runs ended at 529s, but the main session still hit the 7-minute cap in both (66 and 41 tool calls); the soft 5-minute aim didn't make it stop. In run 1 it did the fix first and was stopped just as it started the report ("Now the impact report: I'll write `out/impact.py`…"), so `out/impact.json` was never written, and the reviewer didn't notice it was missing: impact 0.00. Run 2 passed with 6/6 figures. In run 2 the router suite was failing when the main session was stopped, so it wasn't counted as a check, and the reviewer fixed it. The reviewer again ran to its limit both times, and the hook saved 2-3 checkpoints per run. The likely reason the single session no longer fits: the stricter repair rules (a failing reproduction test first, a passing test for every outcome) took 193-260s on their own in #12-#14, and the report took about 230s more there, which adds up to more than 7 minutes |
+| 20  | Back to #10, the best graded setup so far, with one change: a Sonnet advisor inside the Haiku session. The root CLAUDE.md is #10's almost word for word. It no longer names `bin/evaluate` ("every service's test suite and whatever repo-level checks `app/` provides"), since the grader replaces `app/`. It keeps the "Tests that start services" rule from #13/#14, because #10's own old-state test and the repo's checks also start services, and adds "Don't edit `app/contracts/`". `.claude/agents/advisor.md` defines a read-only advisor (Read, Grep, Glob; Sonnet, medium effort). CLAUDE.md tells Haiku to ask it for a plan for the fix as its first step. A Stop hook (`tools/advisor_stop.sh`) blocks the first stop once and asks for a review of the diff against `.review/original_services`, unless more than 420s have passed. run.sh sets `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`. The second session, the checkpoints and the restore from #15-#19 are gone | #10 missed one group of outcomes on the held-out incident (13/17), and a stronger model reading the plan and the diff outcome by outcome targets that kind of miss. In #15-#19 every attempt to run the reviewer as a separate session from run.sh meant splitting the time, checkpointing and restoring, and the reviewer edited code through Bash. As a subagent, its advice lands in Haiku's own context and Haiku makes the edits | 2/2 (final form); 4/6 counting the variants below | 1.00 / 1.00 | $0.3929 | Yes. It took four variants. (a) Haiku told to call the advisor on its own plan and on its diff: 1/1 passed, 482s, $0.29. Sonnet's first reply said to edit the contracts, and Haiku added a new message type to the bus.v3 schema, which the grader's clean copy of the contracts wouldn't have. (b) The same plus "Don't edit `app/contracts/`": 0/1. It was stopped at 540s with only the api fixed (repair 0.44), after slow report work with long thinking pauses. (c) The advisor writes the plan first, and the Stop hook asks for the review: 1/2. In both runs the advisor ran in the background ("Async agent launched"), so Haiku didn't wait for the plan, and in run 2 the hook spent its one block on a stop at 12s. (a) and (b) ran the advisor in the foreground, and the logs don't show why (c) didn't. Run 1 of (c) failed the report (impact 0.08): its script grouped events by (merchant, key) and put the 1,126 events with a null key into one group, so every later one was a repeat. That was a Haiku error unrelated to the advisor, and I didn't add a rule for it, because a null-key rule would be fitted to this incident. (d) (c) plus `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`: 2/2 passed with 6/6 figures, at 447s ($0.28) and 522s ($0.51). The plan came back in 51-81s in both runs. Run 1 stopped at 447s, past the hook's deadline, so it got no review. In run 2 the review at 418s found a real gap (a manual resend could still deliver a repeat), and Haiku fixed it. Haiku never called the advisor except at those two points. Cost is 3-5x #10's $0.09, almost all from Sonnet, and varies 2x with how much it reads (44-92k tokens written to cache). Repair was already 1.00 on the starter, so practice can't show whether the advisor helps on the held-out incident. The setup relies on behavior of Claude Code 2.1.330 (agent `effort` frontmatter, the Stop hook's block decision, the background-tasks variable), and the assignment says only that the grader's Claude Code is pinned, not which version |
 
 **The change that fixed the most failing categories**, and why it worked:
 
-> TODO
+> #5, "Fixes ship into a running system". Every failing run before it (the baseline, #2 run 2, #4 run 2) failed the same 5 incident scenarios: a repeat already queued for a retry, a repeat whose original was delivered, repeats of several payments, a repeat in flight when the release is replaced, and starting the new release twice. Those runs fixed the api so new retries were caught, but they marked repeats with a new field on bus messages, which the old release's rows and queued messages never had, so everything 2.3.1 had already queued still went out. #5 says outright that the old release has already left rows, queued messages, retries and in-flight work in the old format without any new field, that the fix must handle that state when it starts and be safe to start twice, and that a test must create that state first. After it, the agent cancelled old repeats on startup from data the old release did write (the stored idempotency key), and incident went from 4/9 to 9/9 in every run with it in place. It worked because it fixed the agent's wrong belief, "repeats already routed by the old api are out of scope", with a fact about the deployment, and not with a hint about this ticket.
 
 **The change that saved the most money**, and why it worked:
 
-> TODO
+> #8, switching the session from claude-sonnet-5-5 to claude-haiku-5-5, took the average cost from $0.84 to $0.16 per run (later $0.06-0.09 with #9/#10) while keeping both runs at 1.00 / 1.00. Haiku costs about 20x less per token, and by then #3, #5 and #7 had made the CLAUDE.md specific enough that the cheaper model didn't need to work out the right fix on its own: it was told to batch commands and avoid re-reads (#3, which cut requests from 37-48 to 25-32), to handle old-release state (#5), and which docs to trust (#7). Haiku did use more tool calls and output tokens, and ran into the time limit, which #9's time budget and stopping rules then fixed, but even with 3x the turns it was much cheaper. #3 was the other big saving, and it showed where the money goes: every turn re-sends the whole context as cache reads, so the number of turns matters more than the size of any one read (#2, which made reads smaller, raised the request count and saved nothing).
 
 **A change that did not work**, and what it showed you:
 
-> TODO
+> #15-#19, a separate Sonnet reviewer session after the Haiku session, didn't work across five versions (3/10 runs passed, at $0.31-0.62). It showed two things. First, what the model is told about time and about who comes after it changes how much work it does. Told it would be stopped at 7 minutes and reviewed afterwards, Haiku wrote the report and quit after about 70s with no code changed ("Time is short… I'm stopping at the 7-minute limit"), and the reviewer, told its unfinished work would be thrown away, gave up after 35s. With all time and reviewer wording removed (#18), both sessions ran until they were killed. Only a stated budget with concrete stopping rules (#9/#10) kept a session short without making it quit early. Second, the machinery a two-session design needs (dividing the time, checkpoints, a hook to save each passing state, a restore) can fail on its own: the hook never fired because Sonnet edited through Bash `sed`/heredocs and not Edit/Write, and a "suites pass" check kept an api that couldn't start, because its unit tests never load `main.ts`. #20 kept the idea of a stronger model checking the work, but as a read-only subagent inside the Haiku session, so there is no time split and no restore.
 
 **Your final setup.** What `run.sh` does, step by step, and which model handles each step:
 
-> TODO
+> 1. Deletes `writeup.md`, `assignment.md` and `rate_card.json` so the agent can't spend context on them.
+> 2. Runs `tools/generic_malformed_duplicate_check.py` (Python, no model) to write `out/generic_malformed_duplicate_check.json`: each incident file's format, malformed and duplicate line counts, and the definitions used. If it fails, the run goes on.
+> 3. Copies `app/services` to `.review/original_services` and records the start time, for the review diff and the Stop hook's deadline.
+> 4. Sets `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1` so subagents and shell commands run in the foreground, then runs one headless session: **claude-haiku-5-5, `--effort high`**, given task.md as the prompt, with `ScheduleWakeup`/`CronCreate`/`Monitor` disabled, the Stop hook loaded from `prompts/main_settings.json`, and a `timeout -k 15 540` guard. The root `CLAUDE.md` guides it: use few turns, an 8-minute budget, call the advisor first, trust only task.md and `app/contracts/`, a time limit and teardown for tests that start services, handle the old release's state, and compute the impact report with one script that quotes evidence.md's rules.
+> 5. Inside that session, Haiku calls the `advisor` subagent first (**claude-sonnet-5-5, medium effort**, Read/Grep/Glob only) for a plan for the fix. Haiku writes `out/impact.json`, implements the plan, and runs each service's test suite and the repo checks once.
+> 6. The first time Haiku tries to stop, if less than 420s have passed, `tools/advisor_stop.sh` blocks the stop once and tells it to diff against `.review/original_services` and ask the advisor (Sonnet) to review the diff against task.md. Haiku fixes the gaps it names, then stops.
+> 7. run.sh prints the Stop hook's log and exits 0.
 
 **Final setup on the starter incident.** Record your results; add rows for repeated runs. Briefly explain any variation you observed.
 
 | Run | Repair | Impact | Cost |
 | --- | ------ | ------ | ---- |
-| 1   | TODO   | TODO   | TODO |
+| 1   | 1.00   | 1.00 (6/6) | $0.2773 |
+| 2   | 1.00   | 1.00 (6/6) | $0.5084 |
+
+> Both runs passed. The cost is almost all Sonnet, and it varied about 2x with how much the advisor read (44k vs 92k tokens written to cache) and with whether the review happened. Run 1 tried to stop at 447s, past the hook's 420s deadline, so it got a plan and no review (33 requests). Run 2 reached its first stop at 418s and got the review. The review found a real gap (a manual resend could still deliver a repeat), and Haiku fixed it, which took the run to 522s and 49 requests. The time it takes to reach the first stop therefore decides whether a review runs, and the review is the costly part. Earlier variants of #20 (row 20 a-c) passed 2 of 4, so the final form's 2/2 is a small sample.
 
 **What will transfer?** The held-out task is a different incident in Switchyard. Which parts of your setup are about how to work in this repository and its evidence, and which might only have helped with duplicate events:
 
-> TODO
+> These parts are about how to work in this repository and its evidence, so they should transfer: the few-turns and stopping rules (#3, #9), since turns drive cost in any incident; "What to trust" (#7), since the stale `app/AGENTS.md`/`app/CLAUDE.md` and the authority of `app/contracts/` belong to the repo, not to the ticket; not editing contracts because the grader uses a clean copy; time limits and teardown for tests that start services; the impact-report rules (one script, evidence.md's rules quoted and applied literally, check the rejected samples); and the generic checker, which counts any file's format, cut-short lines and duplicates without knowing the incident. "Fixes ship into a running system" (#5) is worded generally and applies to any incident fixed by a deploy over a bad release, but it is the part most shaped by this ticket: it fixed the duplicate-event scenarios, and an incident that isn't about leftover state gets little from it. The advisor's checklist is mostly generic (every outcome and qualifier in task.md, old-release state, contracts are authoritative), but its examples ("already queued", "no manual follow-up") come from this task. The graded runs show the limits. Held-out repair was 17/17, then 13/17 twice, then 16/17 with the advisor (#20). With one run each, that is consistent with the advisor catching some missed outcomes, but it doesn't prove it. Cost did carry over: the held-out #20 run cost $0.3153 (Sonnet $0.27, Haiku $0.05) in 324s, within the starter's $0.28-0.51 and under the $0.75 full-credit line. Impact was 0.93, 1.00, 0.63 and 0.60, so impact on the held-out incident is unreliable, while on the starter it was almost always 1.00. The report rules were checked against only one evidence packet, so "implement the rule literally" may not be enough when the held-out logs break evidence.md's rules in ways the starter doesn't, and `out/impact.json` was written early so it wouldn't be re-checked, which saves turns but leaves errors in place.
 
 ## Part III: Graded Submissions
 
@@ -132,13 +96,19 @@ Upload a zip of your `week6/` folder to the **Assignment 6 (Autograder)** assign
 
 | Submission (up to 3, one run each) | Repair | Impact | Passed? | Cost | What you changed before it |
 | ---------------------------------- | ------ | ------ | ------- | ---- | -------------------------- |
-| 1                                  | TODO   | TODO   | TODO    | TODO | n/a                        |
-| 2                                  | TODO   | TODO   | TODO    | TODO | TODO                       |
-| 3                                  | TODO   | TODO   | TODO    | TODO | TODO                       |
+| 1                                  | 0.76 (incident 13/17) | 1.00 | No | $0.0632 | n/a (setup #10: one Haiku session, CLAUDE.md, generic log checker) |
+| 2                                  | 0.76 (incident 13/17) | 0.63 | No | $0.1003 | #11-#14: split into a repair session and an impact session run in parallel, a reproduction test that must fail before the fix, timeouts and teardown for tests that start services |
+| 3                                  | 0.94 (incident 16/17) | 0.60 | No | $0.3153 | #15-#20: back to one Haiku session (#10), plus a read-only Sonnet advisor subagent that writes the plan first and reviews the diff once through a Stop hook |
+
+Regressions (51/51) and compat (8/8) passed in all three. Before these three, two earlier graded runs were made: setup #8 timed out (run.sh didn't exit within 10 minutes), and setup #9 scored repair 1.00 (17/17) and impact 0.93 at $0.0509. These were made before the gradescope assignment was taken down because of issues and attempts were reset.
 
 **Starter incident versus held-out incident.** Did repair, impact and cost carry over? If not, give your best explanation, accounting for each submission having only one graded run:
 
-> TODO
+> Cost carried over, but repair and impact didn't. Every setup here was 1.00 / 1.00 on the starter in its final form. On the held-out incident, cost stayed in the starter's range ($0.06 and $0.10 for the Haiku-only setups, $0.32 for #20 against $0.28-0.51 on the starter), and every graded run was well under the $0.75 full-credit line.
+>
+> Repair partly carried over. Regressions and compat always passed, so the setups didn't break anything, but the incident scenarios fell short: 13/17 twice, then 16/17 with the advisor. That fits the failure the baseline showed on the starter: the agent fixes the obvious cause and misses one group of outcomes. On the starter, the CLAUDE.md fixed that group (old-release state, #5), but the held-out incident apparently has an outcome my rules don't name. A stronger model reading the plan and the diff against task.md, outcome by outcome, is the one change aimed at that kind of miss, and it was the only one that moved incident from 13 to 16. With one run each, that result is consistent with the advisor helping, but it isn't proof.
+>
+> Impact is the part that didn't carry over: 0.93, 1.00, 0.63 and 0.60 across the graded runs, against nearly always 1.00 on the starter. For the split-session run (submission 2), the starter's report didn't need anything from the repair, but the held-out report may need the diagnosis, for example which rows the bug produced, so an impact session that never investigated the bug may have counted the wrong events. I don't think the advisor caused the drop in submission 3. Each submission is one run, and on the starter, Haiku's report missed in several runs even when repair was perfect (0.97, 0.93, 0.08, 0.00). More importantly, nothing in the setup pointed the stronger model at the report. The advisor planned and reviewed only the code diff, the Stop hook checked only that `out/impact.json` existed, and CLAUDE.md told Haiku not to re-check the report once written. The report was therefore always one unchecked Haiku script. Its rules were only ever tested on the starter's evidence, where they nearly always gave 1.00. The held-out logs likely have corruption, duplicate or clock cases the starter doesn't, and a report checked only on the starter can't show those. The change I would try next is to have the advisor also review the report script against task.md and evidence.md, rule by rule, and to drop the "don't cross-check" rule for the report.
 
 ## Submission
 

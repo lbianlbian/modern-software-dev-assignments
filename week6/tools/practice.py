@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Practice run: what the grader does, on your machine, with the starter incident.
+"""fghfgh
 
     python tools/practice.py            # one run
     python tools/practice.py --runs 3   # three, with the average
